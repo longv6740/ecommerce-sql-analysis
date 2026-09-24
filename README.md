@@ -6,11 +6,11 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 ## Data cleaning
 
-During the audit, I found that empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis. → [`sql/01_data_cleaning.sql`](sql/01_data_cleaning.sql)
+During the audit, I found that empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis. → [`sql/01_data_cleaning.sql`](SQL/01_data_cleaning.sql)
 
 ## Key findings
 
-→ Queries: [`sql/02_business_overview.sql`](sql/02_business_overview.sql)
+→ Queries: [`sql/02_business_overview.sql`](SQL/02_business_overview.sql)
 
 **1. Overall size.** 32,313 orders worth $1.94M, with an average order value of about $60.
 
