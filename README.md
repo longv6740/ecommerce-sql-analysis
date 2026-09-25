@@ -1,16 +1,21 @@
 # E-Commerce Growth & Operations Analysis
 
-SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 website sessions and 32,313 orders.
+SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 website sessions, 1.19M pageviews and 32,313 orders.
 
 **Tools:** PostgreSQL, DBeaver *(Tableau dashboard coming soon)*
 
-## Data cleaning
+## Data cleaning & audit
 
-During the audit, I found that empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis. → [`sql/01_data_cleaning.sql`](SQL/01_data_cleaning.sql)
+→ [`SQL/01_data_cleaning.sql`](SQL/01_data_cleaning.sql)
+
+- **Text "NULL" values.** Empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis.
+- **No duplicate pageviews.** Every page appears at most once per session.
+- **Consistency checks.** Every session has exactly one landing page (6 landing pages sum to 472,871 sessions), and every order passed through a billing page (sums to 32,313).
 
 ## Key findings
 
-→ Queries: [`sql/02_business_overview.sql`](SQL/02_business_overview.sql)
+### Business overview
+→ [`SQL/02_business_overview.sql`](SQL/02_business_overview.sql)
 
 **1. Overall size.** 32,313 orders worth $1.94M, with an average order value of about $60.
 
@@ -26,15 +31,34 @@ During the audit, I found that empty values in `website_sessions` had been impor
 
 **7. The brand is getting stronger.** Free traffic grew from 9% of sessions in 2012 to 23% in 2015, gradually reducing dependence on paid ads.
 
+### Website funnel, A/B tests & landing pages
+→ [`SQL/03_funnel_and_landing_pages.sql`](SQL/03_funnel_and_landing_pages.sql)
+
+**8. Mobile is a missed opportunity.** Desktop converts 3x better than mobile (10.6% vs 3.5% in 2015). Mobile brings 30% of sessions but only 13% of orders, and its conversion has barely improved since 2013. Raising mobile conversion to just 5% would add ~5% more orders without extra ad spend.
+
+**9. Where the funnel leaks.** Only 6.8% of sessions reach an order. The biggest leaks are the product page (only 45% add to cart) and the landing page (45% leave immediately, ~212K sessions). Even at the final billing step, 38% of sessions abandon.
+
+**10. Billing A/B test.** Comparing the full lifetimes of the two billing pages is unfair, because the new page ran in later, stronger years. In the period when both pages ran (Sep 2012 – Jan 2013, ~1,660 sessions each), the new billing page converted 62.1% vs 45.1% for the old one, a 38% relative lift. Rolling it out to all traffic likely added ~8,000 orders (~$480K) over the following two years (estimate).
+
+**11. Landing pages must be compared within the same device.** At first look, lander-3 seemed to be the worst landing page (3.39% conversion). Segmenting by device showed that lander-3 received 100% mobile traffic, while lander-4 and lander-5 received 100% desktop. Compared within the same device, lander-3 is actually the **best** mobile page (3.39% vs 2.96% for /home on mobile). It replaced lander-2 on mobile in July 2013.
+
+**12. Each new landing page beat the previous one.** On desktop: lander-1 (5.3%) → lander-2 (8.0%) → lander-5 (10.2%). On mobile: lander-1 (1.6%) → lander-2 (2.8%) → lander-3 (3.4%). Part of this gain reflects the store improving over time.
+
+## Recommendations (so far)
+
+1. **Fix the mobile experience**, especially checkout, since mobile brings 30% of traffic but converts at a third of the desktop rate.
+2. **Improve the product page**, the funnel's weakest step: test better photos, clearer shipping costs and reviews.
+3. **Plan stock and ad spend around November–December and Valentine's Day.**
+4. **Reduce dependence on Google Ads** by continuing to grow free traffic, and review socialbook spend given its low conversion.
+
 ## Limitations
 
 - The data has no advertising costs, so channel profitability (ROI) can't be measured.
 - 2012 and 2015 are partial years; they are compared with per-day rates or percentages only.
+- Landing page comparisons across different time periods are partly affected by the store's overall improvement over time.
 
 ## Next steps
 
-- Device analysis (desktop vs mobile)
-- Website funnel: where visitors drop off
 - Products, cross-selling and refunds
 - Customer cohorts and repeat purchases
 - Tableau dashboard
