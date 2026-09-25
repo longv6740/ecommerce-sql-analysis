@@ -32,3 +32,30 @@ SET utm_source   = NULLIF(utm_source, 'NULL'),
 
 -- Re-run the audit query above: text_null columns must be 0 before committing.
 COMMIT;
+
+
+-- ------------------------------------------------------------------------------
+-- AUDIT 2: Is the is_primary_item flag in order_items usable?
+-- Finding: all 40,025 rows were FALSE after import, which is impossible
+-- (every order must have exactly one primary item).
+-- ------------------------------------------------------------------------------
+SELECT is_primary_item, COUNT(*)
+FROM order_items
+GROUP BY is_primary_item;
+
+
+-- ------------------------------------------------------------------------------
+-- CLEAN 2: Rebuild is_primary_item from orders.primary_product_id
+-- An item is primary when its product is the order's primary product.
+-- Verified after the update: TRUE = 32,313 (one per order), FALSE = 7,712
+-- (= 40,025 items - 32,313 orders).
+-- ------------------------------------------------------------------------------
+BEGIN;
+
+UPDATE order_items oi
+SET is_primary_item = (oi.product_id = o.primary_product_id)
+FROM orders o
+WHERE oi.order_id = o.order_id;
+
+-- Re-run AUDIT 2: expect TRUE = 32,313 and FALSE = 7,712 before committing.
+COMMIT;
