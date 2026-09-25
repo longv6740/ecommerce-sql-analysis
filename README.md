@@ -9,6 +9,7 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 → [`SQL/01_data_cleaning.sql`](SQL/01_data_cleaning.sql)
 
 - **Text "NULL" values.** Empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis.
+- **Broken primary-item flag.** After import, `is_primary_item` in `order_items` was FALSE for all 40,025 items, which is impossible, since every order has exactly one main item. I rebuilt it from `orders.primary_product_id` and verified the result against known totals: 32,313 primary items (one per order) and 7,712 add-ons (items − orders).
 - **No duplicate pageviews.** Every page appears at most once per session.
 - **Consistency checks.** Every session has exactly one landing page (6 landing pages sum to 472,871 sessions), and every order passed through a billing page (sums to 32,313).
 
@@ -44,21 +45,38 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 **12. Each new landing page beat the previous one.** On desktop: lander-1 (5.3%) → lander-2 (8.0%) → lander-5 (10.2%). On mobile: lander-1 (1.6%) → lander-2 (2.8%) → lander-3 (3.4%). Part of this gain reflects the store improving over time.
 
+### Products, cross-selling & refunds
+→ [`SQL/04_product_analysis.sql`](SQL/04_product_analysis.sql)
+
+**13. One product drives the business.** Mr. Fuzzy brings 62% of revenue, a single-product dependency risk. The newer products have higher margins (Sugar Panda 68.5%, Mini Bear 68.4%), and Love Bear earns the most profit per item ($37.50) thanks to its higher price.
+
+**14. Totals hide the fastest-selling products.** Adjusted for time on sale, the Mini Bear is the fastest-selling new product (12.3 items/day), ahead of Sugar Panda (10.8) and Love Bear (7.2), even though it looked weakest by total items.
+
+**15. The Mini Bear is a cross-sell product.** 88% of its sales are add-ons to another bear. Mr. Fuzzy is a destination product, sold as an add-on only 1.5% of the time.
+
+**16. Cross-selling works, with room to grow.** Since all four products have been on sale (Feb 2014 onward), 35% of orders include an add-on. The Mini Bear is the top add-on for every main bear and makes up 60% of all add-ons. Love Bear buyers add the least (25%). A 2-item order is worth about $38 more than a 1-item order.
+
+**17. Refunds cost 4.4% of revenue.** Refunds total $85K. Sugar Panda has the highest refund rate (6.0%), erasing 8.8% of its profit and weakening its best-margin advantage, while Mr. Fuzzy accounts for 72% of refunded money due to its volume.
+
+**18. Refund spikes point to quality incidents, not seasonality.** Mr. Fuzzy's refund rate spiked in September 2012 (9.1%) and August–September 2014 (peaking at 13.3%, more than double its normal 5.1%), then returned to normal, while September 2013 was normal. This suggests specific quality incidents that were resolved. (The data has no refund reasons, so the cause can't be confirmed.)
+
 ## Recommendations (so far)
 
 1. **Fix the mobile experience**, especially checkout, since mobile brings 30% of traffic but converts at a third of the desktop rate.
 2. **Improve the product page**, the funnel's weakest step: test better photos, clearer shipping costs and reviews.
 3. **Plan stock and ad spend around November–December and Valentine's Day.**
-4. **Reduce dependence on Google Ads** by continuing to grow free traffic, and review socialbook spend given its low conversion.
+4. **Bundle the Mini Bear** on the cart page with every main bear, and test a Love Bear couple bundle for Valentine's Day.
+5. **Monitor refund rates monthly per product**, with an alert when a product's rate exceeds twice its normal level. The 2014 Mr. Fuzzy incident lasted two months.
+6. **Reduce dependence on Google Ads** by continuing to grow free traffic, and review socialbook spend given its low conversion.
 
 ## Limitations
 
 - The data has no advertising costs, so channel profitability (ROI) can't be measured.
 - 2012 and 2015 are partial years; they are compared with per-day rates or percentages only.
 - Landing page comparisons across different time periods are partly affected by the store's overall improvement over time.
+- The data has no refund reasons, so the causes of refund spikes are inferred, not confirmed.
 
 ## Next steps
 
-- Products, cross-selling and refunds
 - Customer cohorts and repeat purchases
 - Tableau dashboard
