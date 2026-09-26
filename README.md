@@ -10,6 +10,7 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 - **Text "NULL" values.** Empty values in `website_sessions` had been imported as the **text** `'NULL'` instead of real NULLs (83,328 rows in `utm_source`, 39,917 in `http_referer`). This made every `IS NULL` check fail and hid two traffic channels. I converted them into real NULLs inside a transaction before analysis.
 - **Broken primary-item flag.** After import, `is_primary_item` in `order_items` was FALSE for all 40,025 items, which is impossible, since every order has exactly one main item. I rebuilt it from `orders.primary_product_id` and verified the result against known totals: 32,313 primary items (one per order) and 7,712 add-ons (items − orders).
+- **Broken repeat-session flag.** `is_repeat_session` was also FALSE for all 472,871 sessions, the same boolean import bug (every boolean column was affected). I rebuilt it from each user's first session and verified it: 394,318 first visits (exactly one per user) and 78,553 return visits.
 - **No duplicate pageviews.** Every page appears at most once per session.
 - **Consistency checks.** Every session has exactly one landing page (6 landing pages sum to 472,871 sessions), and every order passed through a billing page (sums to 32,313).
 
@@ -60,14 +61,28 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 **18. Refund spikes point to quality incidents, not seasonality.** Mr. Fuzzy's refund rate spiked in September 2012 (9.1%) and August–September 2014 (peaking at 13.3%, more than double its normal 5.1%), then returned to normal, while September 2013 was normal. This suggests specific quality incidents that were resolved. (The data has no refund reasons, so the cause can't be confirmed.)
 
-## Recommendations (so far)
+### Customers & retention
+→ [`SQL/05_customer_analysis.sql`](SQL/05_customer_analysis.sql)
 
-1. **Fix the mobile experience**, especially checkout, since mobile brings 30% of traffic but converts at a third of the desktop rate.
-2. **Improve the product page**, the funnel's weakest step: test better photos, clearer shipping costs and reviews.
-3. **Plan stock and ad spend around November–December and Valentine's Day.**
-4. **Bundle the Mini Bear** on the cart page with every main bear, and test a Love Bear couple bundle for Valentine's Day.
+**19. Almost every customer buys once.** 98% of customers order only once (591 of 31,696 ever reorder). This is partly natural for gift products, but combined with 82% paid traffic, it means the store pays to acquire nearly every order.
+
+**20. Visitors often need time to decide, and come back for free.** 17% of sessions are return visits, and two-thirds of them come back through free channels (vs 8% for first visits). Return visits convert better (7.8% vs 6.6%) and produce 19% of all orders, mostly first purchases by visitors who came back later. Each paid click keeps generating value after the first visit.
+
+**21. Repeat buyers return within about a month.** The median gap between first and last order is 33 days (average 37, mildly skewed right by a few slower customers), and no customer returned after 118 days.
+
+**22. Repeat customers are worth more, but they are not the main lever.** Repeat customers are worth 2.1x more ($125.81 vs $59.93), but they are only 1.9% of customers and 3.8% of revenue. Even doubling them would add only ~2% revenue, so improving conversion and cross-selling are bigger levers than retention for this gift-driven business.
+
+## Recommendations
+
+Roughly ranked by expected impact:
+
+1. **Fix the mobile experience**, especially checkout. Mobile brings 30% of traffic but converts at a third of the desktop rate; raising mobile conversion to just 5% would add ~5% more orders without extra ad spend.
+2. **Grow cross-selling.** Bundle the Mini Bear on the cart page with every main bear, and test a Love Bear couple bundle for Valentine's Day. Each add-on is worth ~$38, and 65% of orders still have none.
+3. **Improve the product page**, the funnel's weakest step (only 45% add to cart): test better photos, clearer shipping costs and reviews.
+4. **Plan stock and ad spend around November–December and Valentine's Day.**
 5. **Monitor refund rates monthly per product**, with an alert when a product's rate exceeds twice its normal level. The 2014 Mr. Fuzzy incident lasted two months.
 6. **Reduce dependence on Google Ads** by continuing to grow free traffic, and review socialbook spend given its low conversion.
+7. **Send re-engagement emails within the first month after purchase**, when repeat buyers usually return, timed around gift occasions. A smaller but cheap win.
 
 ## Limitations
 
@@ -78,5 +93,4 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 ## Next steps
 
-- Customer cohorts and repeat purchases
 - Tableau dashboard
