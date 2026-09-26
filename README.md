@@ -2,7 +2,15 @@
 
 SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 website sessions, 1.19M pageviews and 32,313 orders.
 
-**Tools:** PostgreSQL, DBeaver *(Tableau dashboard coming soon)*
+**Tools:** PostgreSQL, DBeaver, Tableau
+
+## 📊 Interactive dashboard
+
+**[View the live dashboard on Tableau Public →](https://public.tableau.com/app/profile/vu.hoang.long/viz/EcommGrowthTableau/E-CommerceGrowthDashboardMar2012Feb2015)**
+
+![E-Commerce Growth Dashboard](dashboard.png)
+
+The dashboard shows headline KPIs, monthly revenue, conversion by device, the website funnel, and product performance. All metrics are calculated in SQL, and Tableau only visualizes the results. The partial month of March 2015 is excluded from the monthly charts. The workbook file is included as [`Ecomm_Dashboard.twbx`](Ecomm_Dashboard.twbx).
 
 ## Data cleaning & audit
 
@@ -91,6 +99,8 @@ Roughly ranked by expected impact:
 - Landing page comparisons across different time periods are partly affected by the store's overall improvement over time.
 - The data has no refund reasons, so the causes of refund spikes are inferred, not confirmed.
 
-## Next steps
+## Possible extensions
 
-- Tableau dashboard
+- Compare landing pages only during periods when they ran at the same time, to separate page effects from overall store improvement.
+- Add advertising cost data, if available, to measure profitability (ROI) by channel.
+- Connect Tableau directly to PostgreSQL instead of CSV exports, so the dashboard refreshes automatically.
