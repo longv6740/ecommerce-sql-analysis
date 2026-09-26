@@ -8,7 +8,7 @@ SQL analysis of an online teddy bear store (March 2012 – March 2015): 472,871 
 
 **[View the live dashboard on Tableau Public →](https://public.tableau.com/app/profile/vu.hoang.long/viz/EcommGrowthTableau/E-CommerceGrowthDashboardMar2012Feb2015)**
 
-![E-Commerce Growth Dashboard](E-Commerce Growth Dashboard (Mar 2012 – Feb 2015).png)
+![E-Commerce Growth Dashboard](dashboard.png)
 
 The dashboard shows headline KPIs, monthly revenue, conversion by device, the website funnel, and product performance. All metrics are calculated in SQL, and Tableau only visualizes the results. The partial month of March 2015 is excluded from the monthly charts. The workbook file is included as [`Ecomm_Dashboard.twbx`](Ecomm_Dashboard.twbx).
 
