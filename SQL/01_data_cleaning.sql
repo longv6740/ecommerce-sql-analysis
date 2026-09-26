@@ -59,3 +59,32 @@ WHERE oi.order_id = o.order_id;
 
 -- Re-run AUDIT 2: expect TRUE = 32,313 and FALSE = 7,712 before committing.
 COMMIT;
+
+
+-- ------------------------------------------------------------------------------
+-- AUDIT 3: Is the is_repeat_session flag in website_sessions usable?
+-- Finding: all 472,871 sessions were FALSE after import, the same boolean
+-- import bug as is_primary_item (all boolean columns were affected).
+-- ------------------------------------------------------------------------------
+SELECT is_repeat_session, COUNT(*)
+FROM website_sessions
+GROUP BY is_repeat_session;
+
+
+-- ------------------------------------------------------------------------------
+-- CLEAN 3: Rebuild is_repeat_session from each user's first session
+-- A session is a repeat if it is not the user's first (smallest) session id.
+-- Verified: FALSE = 394,318 (= distinct users, one first visit each),
+-- TRUE = 78,553 (= sessions - users).
+-- ------------------------------------------------------------------------------
+BEGIN;
+
+UPDATE website_sessions ws
+SET is_repeat_session = (ws.website_session_id <> f.first_session_id)
+FROM (SELECT user_id, MIN(website_session_id) AS first_session_id
+      FROM website_sessions
+      GROUP BY user_id) f
+WHERE ws.user_id = f.user_id;
+
+-- Re-run AUDIT 3 and compare FALSE with COUNT(DISTINCT user_id) before committing.
+COMMIT;
